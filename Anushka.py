@@ -13,6 +13,40 @@ print(df.head())
 print(df.columns)
 print(len(df.columns))
 
+#%%
+# EDA
+# Safety features
+
+# Is parking camera?
+import plotly.express as px
+fig = px.histogram(df, x="is_parking_camera", color='is_claim')
+fig.show()
+
+# is parking sensors?
+import plotly.express as px
+fig = px.histogram(df, x="is_parking_sensors", color='is_claim')
+fig.show()
+
+# is_adjusttable_steering
+import plotly.express as px
+fig = px.histogram(df, x="is_adjustable_steering", color='is_claim')
+fig.show()
+
+
+
+# Description of car
+#	Age of car 
+import plotly.express as px
+fig = px.box(df,y="age_of_car", x="is_claim")
+fig.show()
+
+
+#	Model
+
+
+#	Segment
+
+
 
 #%%
 # Numerical Variables
