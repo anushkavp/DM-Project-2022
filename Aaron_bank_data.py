@@ -302,8 +302,10 @@ for k in (3,5,7,9,11,13,15):
     knn_full.fit(x_train,y_train)
     ytest_pred = knn_full.predict(x_test)
     # Score report
+    print(k)
     print(classification_report(y_test,ytest_pred))
     print(confusion_matrix(y_test,ytest_pred))
+    print()
 
 # %%
 # KNN -- Reduced Variable Model
@@ -317,8 +319,10 @@ for k in (3,5,7,9,11,13,15):
     knn_red.fit(x_train_red, y_train_red)
     ytest_pred_red = knn_red.predict(x_test_red)
     # Score report
+    print(k)
     print(classification_report(y_test_red, ytest_pred_red))
     print(confusion_matrix(y_test_red, ytest_pred_red))
+    print()
 
 # %%
 # KNN -- Smote Enhanced Full Model 
@@ -331,8 +335,10 @@ for k in (3,5,7,9,11,13,15):
     knn_smote_full.fit(x_train_smote, y_train_smote)
     ytest_pred_smote = knn_smote_full.predict(x_test)
     # Score report
+    print(k)
     print(classification_report(y_test, ytest_pred_smote))
     print(confusion_matrix(y_test, ytest_pred_smote))
+    print()
 
 # %%
 # KNN -- Smote Enhanced Reduced Variable Model 
@@ -344,8 +350,10 @@ for k in (3,5,7,9,11,13,15):
     knn_smote_red.fit(x_train_smote_red, y_train_smote_red)
     ytest_pred_smote_red = knn_smote_red.predict(x_test_red)
     # Score report
+    print(k)
     print(classification_report(y_test_red, ytest_pred_smote_red))
     print(confusion_matrix(y_test_red, ytest_pred_smote_red))
+    print()
 
 
 #%%
