@@ -23,25 +23,44 @@ print(df.dtypes)
 # count plot on target variable 
 sns.countplot(df["y"])
 plt.title("Term Deposit Subscription")
+plt.xlabel("Subscribed to Term Deposit?")
+plt.ylabel("Count of users")
 plt.show()
 
 # is there any relationship b/w duration of the call and the contact type? 
 import plotly.express as px
 fig = px.box(df, x="contact", y="duration", color="y")
+fig.update_layout(
+    title="Duration of call vs Contact Communication",
+    xaxis_title="Contact Communication Type",
+    yaxis_title="Duration of call (in seconds)",
+    legend_title="Subscribed?",
+)
 fig.show()
 # conclusion - it can be seen that there is not significant difference between the call duration and the kind of contact we use for communication.
 # However, when compared with the target variable, we see that the customers who spend more time on the call with the marketing team tend to have a higher success rate of term deposit subscription
 
+# Comparing duration and target variable
+import plotly.express as px
+fig = px.box(df,y="duration", color="y")
+fig.update_layout(
+    title="Duration of call vs Subscription",
+    yaxis_title="Duration of call (in seconds)",
+    legend_title="Subscribed?",
+)
+fig.show()
+# Conclusion - we see that the people who have spent more time on the marketing calls tend to have a higher probability of subscribing to the term deposits  
+# However, there are certainly some outliers as seen from the plot. Calls going over 1500 seconds (~90 mins) are impossible. And are hence, deemed as outliers.
 
 # is there any relationship between the target variable and the contact communication type
-sns.countplot(data=df, x="y", hue="contact")
+ax=sns.countplot(data=df, x="y", hue="contact")
+ax.set_title("Contact Type vs Subscription")
+ax.set_xlabel('Term Deposit Subscribed?')
+ax.set_ylabel('Count of users')
 plt.show()
 # conclusion - there are more users using cellular devices. Hence, to make sure that the customer can be reached promptly, we can call up on their cellular devices
 
 
-# During which months do we have a higher acceptance count for term deposit subscription
-pd.value_counts(df.day[df.y=="yes"]).plot.bar()
-# Observation - Most high chance of subscription when customer is called during the middle of the month (between 12th and 17th date)
 
 
 
@@ -281,6 +300,7 @@ print(classification_report(y_test, clf1.predict(X_test)))
 # %%
 
 # SVC with different gamma values
+# took 17 mins to execute
 gammas = ["auto","scale", 0.1]
 for gamma in gammas:
     print("GAMMA = ", gamma)
