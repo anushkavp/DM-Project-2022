@@ -187,3 +187,68 @@ plt.legend()
 # show the plot
 plt.show()
 # %%
+# Statsmodel
+
+import statsmodels.api as sm 
+from statsmodels.formula.api import glm
+from sklearn.model_selection import train_test_split
+
+X, y = df_anushka.iloc[:, :-1], df_anushka.iloc[:, -1]
+# Train/test set generation
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=123
+)
+
+from sklearn.linear_model import LogisticRegression
+from imblearn.over_sampling import SMOTE
+os = SMOTE(random_state=123)
+columns = X_train.columns
+
+os_data_X,os_data_y=os.fit_resample(X_train, y_train)
+os_data_X = pd.DataFrame(data=os_data_X,columns=columns )
+os_data_y= pd.DataFrame(data=os_data_y)
+
+os_data = pd.concat([os_data_X.reset_index(drop=True), os_data_y], axis=1)
+os_test = pd.concat([X_test.reset_index(drop=True), y_test], axis=1)
+
+modelLogit = glm(formula='y ~ C(marital)+C(education)+C(default)+C(housing)+C(loan)+C(contact)+C(month)+duration+campaign+C(poutcome)', data=os_data, family=sm.families.Binomial())
+
+modelLogitFit = modelLogit.fit()
+print( modelLogitFit.summary() )
+
+modelpredicitons = pd.DataFrame( columns=['Predicted'], data= modelLogitFit.predict(pd.concat([X_test, y_test], axis=1))) 
+cut_off = 0.3
+# Compute class predictions
+modelpredicitons['Predictions'] = np.where(modelpredicitons['Predicted'] > cut_off, 1, 0)
+print(modelpredicitons.Predictions.head())
+#
+# Make a cross table
+confusionmatrix = (pd.crosstab(os_test.y, modelpredicitons.Predictions,
+rownames=['Actual'], colnames=['Predicted'],
+margins = True))
+
+print(pd.crosstab(os_test.y, modelpredicitons.Predictions,
+rownames=['Actual'], colnames=['Predicted'],
+margins = True))
+
+TN = confusionmatrix.iloc[0,0]
+FP = confusionmatrix.iloc[0,1]
+FN = confusionmatrix.iloc[1,0]
+TP = confusionmatrix.iloc[1,1]
+accuracy = (TP+TN)/(TP+TN+FP+FN)
+precision = TP / (TP + FP)
+recall = TP / (TP + FN)
+specificity = TN / (TN + FP)
+print("Accuracy = ", accuracy)
+print("Precision = ",precision)
+print("Recall/Sensitivity = ",recall)
+print("Specificity = ",specificity)
+print("F1 score = ",(2*(precision)*(recall))/(precision + recall))
+
+# %%
+# Cross fold validations
+from sklearn.model_selection import cross_val_score
+
+lr_cv_acc = cross_val_score(logisticRegr, os_data_X, os_data_y, cv= 5, scoring='accuracy' )
+print(f'LR CV accuracy score:  {lr_cv_acc}')
+
