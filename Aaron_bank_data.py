@@ -1,6 +1,7 @@
 #%%
 # Package Load Ins
 import pandas as pd
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import scipy.stats as stats
@@ -255,6 +256,15 @@ print()
 #%%
 # Preprocess
 #
+
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler()
+
+df_model[["age", "balance"]] =scaler.fit_transform(df_model[['age', 'balance']])
+df_model[["day", "duration"]] =scaler.fit_transform(df_model[['day', 'duration']])
+df_model[["campaign", "pdays"]] =scaler.fit_transform(df_model[['campaign', 'pdays']])
+df_model[["previous"]] =scaler.fit_transform(df_model[['previous']])
+
 df_model.default = df_model.default.map(dict(yes=1, no=0))
 df_model.housing = df_model.housing.map(dict(yes=1, no=0))
 df_model.loan = df_model.loan.map(dict(yes=1, no=0))
@@ -283,14 +293,17 @@ x_train, x_test, y_train, y_test = train_test_split(x_model,y_model,test_size = 
 #
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import cross_validate
 from sklearn.model_selection import cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
-knn_full = KNeighborsClassifier(n_neighbors=15) 
-knn_full.fit(x_train,y_train)
-ytest_pred = knn_full.predict(x_test)
-# Score report
-print(classification_report(y_test,ytest_pred))
-print(confusion_matrix(y_test,ytest_pred))
+
+for k in (3,5,7,9,11,13,15):
+    knn_full = KNeighborsClassifier(n_neighbors=k) 
+    knn_full.fit(x_train,y_train)
+    ytest_pred = knn_full.predict(x_test)
+    # Score report
+    print(classification_report(y_test,ytest_pred))
+    print(confusion_matrix(y_test,ytest_pred))
 
 # %%
 # KNN -- Reduced Variable Model
@@ -299,12 +312,13 @@ x_model_red = x_model.copy()
 x_model_red = x_model_red.drop(columns=['job', 'marital', 'day', 'poutcome'])
 x_train_red, x_test_red, y_train_red, y_test_red = train_test_split(x_model_red,y_model,test_size = 0.3,random_state=10)
 
-knn_red = KNeighborsClassifier(n_neighbors=15) 
-knn_red.fit(x_train_red, y_train_red)
-ytest_pred_red = knn_red.predict(x_test_red)
-# Score report
-print(classification_report(y_test_red, ytest_pred_red))
-print(confusion_matrix(y_test_red, ytest_pred_red))
+for k in (3,5,7,9,11,13,15):
+    knn_red = KNeighborsClassifier(n_neighbors=k) 
+    knn_red.fit(x_train_red, y_train_red)
+    ytest_pred_red = knn_red.predict(x_test_red)
+    # Score report
+    print(classification_report(y_test_red, ytest_pred_red))
+    print(confusion_matrix(y_test_red, ytest_pred_red))
 
 # %%
 # KNN -- Smote Enhanced Full Model 
@@ -312,26 +326,46 @@ print(confusion_matrix(y_test_red, ytest_pred_red))
 from imblearn.over_sampling import SMOTE
 smote = SMOTE(random_state=123)
 x_train_smote, y_train_smote=smote.fit_resample(x_train, y_train)
-
-knn_smote_full = KNeighborsClassifier(n_neighbors=15) 
-knn_smote_full.fit(x_train_smote, y_train_smote)
-ytest_pred_smote = knn_smote_full.predict(x_test)
-# Score report
-print(classification_report(y_test, ytest_pred_smote))
-print(confusion_matrix(y_test, ytest_pred_smote))
+for k in (3,5,7,9,11,13,15):
+    knn_smote_full = KNeighborsClassifier(n_neighbors=k) 
+    knn_smote_full.fit(x_train_smote, y_train_smote)
+    ytest_pred_smote = knn_smote_full.predict(x_test)
+    # Score report
+    print(classification_report(y_test, ytest_pred_smote))
+    print(confusion_matrix(y_test, ytest_pred_smote))
 
 # %%
 # KNN -- Smote Enhanced Reduced Variable Model 
 #
-from imblearn.over_sampling import SMOTE
 smote_red = SMOTE(random_state=123)
-x_train_smote_red, y_train_smote_red = smote.fit_resample(x_train_red, y_train_red)
+x_train_smote_red, y_train_smote_red = smote_red.fit_resample(x_train_red, y_train_red)
+for k in (3,5,7,9,11,13,15):
+    knn_smote_red = KNeighborsClassifier(n_neighbors=k) 
+    knn_smote_red.fit(x_train_smote_red, y_train_smote_red)
+    ytest_pred_smote_red = knn_smote_red.predict(x_test_red)
+    # Score report
+    print(classification_report(y_test_red, ytest_pred_smote_red))
+    print(confusion_matrix(y_test_red, ytest_pred_smote_red))
 
-knn_smote_red = KNeighborsClassifier(n_neighbors=11) 
-knn_smote_red.fit(x_train_smote_red, y_train_smote_red)
-ytest_pred_smote_red = knn_smote_red.predict(x_test_red)
-# Score report
-print(classification_report(y_test_red, ytest_pred_smote_red))
-print(confusion_matrix(y_test_red, ytest_pred_smote_red))
+
+#%%
+# from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, f1_score
+# knn_cvs = KNeighborsClassifier(n_neighbors=15)
+# scoring = {'accuracy' : make_scorer(accuracy_score), 
+#            'precision' : make_scorer(precision_score),
+#            'recall' : make_scorer(recall_score), 
+#            'f1_score' : make_scorer(f1_score)}
+# xmodel_result = cross_validate(knn_cvs, x_train_smote, y_train_smote, cv=10, scoring=scoring)
+# knn_cvs.fit(x_train_smote, y_train_smote)
+# knn_cvs.score(x_train_smote, y_train_smote)
+# print("Accuracy: ",xmodel_result['test_accuracy'].mean())
+# print("Precision: ",xmodel_result['test_precision'].mean())
+# print("Recall: ",xmodel_result['test_recall'].mean())
+# print("F1 Score: ",xmodel_result['test_f1_score'].mean())
+
 
 # %%
+knn_cvs = KNeighborsClassifier(n_neighbors=15)
+xmodel_result = cross_val_score(knn_cvs, x_train_smote, y_train_smote, cv=10)
+knn_cvs.fit(x_train_smote, y_train_smote)
+knn_cvs.score(x_train_smote, y_train_smote)
