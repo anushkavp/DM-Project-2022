@@ -365,7 +365,7 @@ for k in (3,5,7,9,11,13,15):
 
 
 # %%
-knn_cvs = KNeighborsClassifier(n_neighbors=15)
+knn_cvs = KNeighborsClassifier(n_neighbors=13)
 xmodel_result = cross_val_score(knn_cvs, x_train_smote, y_train_smote, cv=10)
 knn_cvs.fit(x_train_smote, y_train_smote)
 knn_cvs.score(x_train_smote, y_train_smote)
@@ -375,7 +375,7 @@ knn_cvs.score(x_train_smote, y_train_smote)
 from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
 
-knn_smote_3 = KNeighborsClassifier(n_neighbors=3) 
+knn_smote_3 = KNeighborsClassifier(n_neighbors=13) 
 knn_smote_3.fit(x_train_smote_red, y_train_smote_red)
 ytest_pred_3 = knn_smote_3.predict(x_test_red)
 fpr, tpr, threshold = roc_curve(y_test, ytest_pred_3)
