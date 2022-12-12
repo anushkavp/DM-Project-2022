@@ -369,3 +369,26 @@ knn_cvs = KNeighborsClassifier(n_neighbors=15)
 xmodel_result = cross_val_score(knn_cvs, x_train_smote, y_train_smote, cv=10)
 knn_cvs.fit(x_train_smote, y_train_smote)
 knn_cvs.score(x_train_smote, y_train_smote)
+
+#%%
+#
+from sklearn.metrics import roc_curve
+from sklearn.metrics import auc
+
+knn_smote_3 = KNeighborsClassifier(n_neighbors=3) 
+knn_smote_3.fit(x_train_smote_red, y_train_smote_red)
+ytest_pred_3 = knn_smote_3.predict(x_test_red)
+fpr, tpr, threshold = roc_curve(y_test, ytest_pred_3)
+roc_auc = auc(fpr, tpr)
+
+plt.title('Receiver Operating Characteristic')
+plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
+plt.legend(loc = 'lower right')
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0, 1])
+plt.ylim([0, 1])
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.title('ROC Curve of kNN')
+plt.show()
+# %%
