@@ -252,3 +252,43 @@ from sklearn.model_selection import cross_val_score
 lr_cv_acc = cross_val_score(logisticRegr, os_data_X, os_data_y, cv= 5, scoring='accuracy' )
 print(f'LR CV accuracy score:  {lr_cv_acc}')
 
+#%%
+
+# SVC
+# (took 8 mins to execute)
+from sklearn.metrics import confusion_matrix 
+from sklearn.metrics import classification_report
+from sklearn.svm import SVC, LinearSVC
+clf1 = LinearSVC()
+clf2 = SVC(kernel="linear")
+clf3 = SVC()
+classifiers = [clf1,clf2,clf3] 
+
+# for c in classifiers:
+#     print("Classifier: ",c)
+#     c.fit(os_data_X,os_data_y) 
+#     print(f'svc train score:  {c.score(X_train,y_train)}')
+#     print(f'svc test score:  {c.score(X_test,y_test)}')
+#     print(confusion_matrix(y_test, c.predict(X_test)))
+#     print(classification_report(y_test, c.predict(X_test)))
+clf1.fit(os_data_X, os_data_y)
+print(f'svc train score:  {clf1.score(X_train,y_train)}')
+print(f'svc test score:  {clf1.score(X_test,y_test)}')
+print(confusion_matrix(y_test, clf1.predict(X_test)))
+print(classification_report(y_test, clf1.predict(X_test)))
+
+
+# %%
+
+# SVC with different gamma values
+gammas = ["auto","scale", 0.1]
+for gamma in gammas:
+    print("GAMMA = ", gamma)
+    svc = SVC(gamma=gamma).fit(os_data_X, os_data_y)
+    print(f'svc train score:  {svc.score(os_data_X, os_data_y)}')
+    print(f'svc test score:  {svc.score(X_test,y_test)}')
+    print(confusion_matrix(y_test, svc.predict(X_test)))
+    print(classification_report(y_test, svc.predict(X_test)))
+    
+
+# %%
