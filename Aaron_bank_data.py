@@ -285,7 +285,7 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
-knn_full = KNeighborsClassifier(n_neighbors=9) 
+knn_full = KNeighborsClassifier(n_neighbors=15) 
 knn_full.fit(x_train,y_train)
 ytest_pred = knn_full.predict(x_test)
 # Score report
@@ -299,7 +299,7 @@ x_model_red = x_model.copy()
 x_model_red = x_model_red.drop(columns=['job', 'marital', 'day', 'poutcome'])
 x_train_red, x_test_red, y_train_red, y_test_red = train_test_split(x_model_red,y_model,test_size = 0.3,random_state=10)
 
-knn_red = KNeighborsClassifier(n_neighbors=9) 
+knn_red = KNeighborsClassifier(n_neighbors=15) 
 knn_red.fit(x_train_red, y_train_red)
 ytest_pred_red = knn_red.predict(x_test_red)
 # Score report
@@ -307,15 +307,31 @@ print(classification_report(y_test_red, ytest_pred_red))
 print(confusion_matrix(y_test_red, ytest_pred_red))
 
 # %%
+# KNN -- Smote Enhanced Full Model 
+#
 from imblearn.over_sampling import SMOTE
 smote = SMOTE(random_state=123)
 x_train_smote, y_train_smote=smote.fit_resample(x_train, y_train)
 
-knn_smote_full = KNeighborsClassifier(n_neighbors=9) 
+knn_smote_full = KNeighborsClassifier(n_neighbors=15) 
 knn_smote_full.fit(x_train_smote, y_train_smote)
 ytest_pred_smote = knn_smote_full.predict(x_test)
 # Score report
 print(classification_report(y_test, ytest_pred_smote))
 print(confusion_matrix(y_test, ytest_pred_smote))
+
+# %%
+# KNN -- Smote Enhanced Reduced Variable Model 
+#
+from imblearn.over_sampling import SMOTE
+smote_red = SMOTE(random_state=123)
+x_train_smote_red, y_train_smote_red = smote.fit_resample(x_train_red, y_train_red)
+
+knn_smote_red = KNeighborsClassifier(n_neighbors=11) 
+knn_smote_red.fit(x_train_smote_red, y_train_smote_red)
+ytest_pred_smote_red = knn_smote_red.predict(x_test_red)
+# Score report
+print(classification_report(y_test_red, ytest_pred_smote_red))
+print(confusion_matrix(y_test_red, ytest_pred_smote_red))
 
 # %%
