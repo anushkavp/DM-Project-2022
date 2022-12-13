@@ -120,9 +120,12 @@ X_train, X_test, y_train, y_test = train_test_split(
 #%%
 # Base model
 from sklearn.linear_model import LogisticRegression 
-logisticRegr = LogisticRegression()
-_ = logisticRegr.fit(X_train, y_train)
-logisticRegr.score(X_test, y_test)
+logisticRegr1 = LogisticRegression()
+_ = logisticRegr1.fit(X_train, y_train)
+logisticRegr1.score(X_test, y_test)
+from sklearn.metrics import classification_report
+y_true, y_pred = y_test, logisticRegr1.predict(X_test)
+print(classification_report(y_true, y_pred))
 
 #%% RFE
 from sklearn.feature_selection import RFE
@@ -138,11 +141,14 @@ print("The best 10 columns are =>",X_train.loc[:, rfe.support_].columns)
 
 #%% 
 # model with few dimensions
-logisticRegr = LogisticRegression()
-_ = logisticRegr.fit(X_train.loc[:, rfe.support_], y_train)
-logisticRegr.score(X_test.loc[:,['age', 'default', 'balance', 'housing', 'loan', 'contact', 'duration',
+logisticRegr2 = LogisticRegression()
+_ = logisticRegr2.fit(X_train.loc[:, rfe.support_], y_train)
+logisticRegr2.score(X_test.loc[:,['age', 'default', 'balance', 'housing', 'loan', 'contact', 'duration',
        'campaign', 'pdays', 'previous']], y_test)
-
+from sklearn.metrics import classification_report
+y_true, y_pred = y_test, logisticRegr2.predict(X_test.loc[:,['age', 'default', 'balance', 'housing', 'loan', 'contact', 'duration',
+       'campaign', 'pdays', 'previous']])
+print(classification_report(y_true, y_pred))
 
 #%% smote
 X_train = X_train.loc[:,['age', 'default', 'balance', 'housing', 'loan', 'contact', 'duration',
@@ -263,6 +269,7 @@ print("Precision = ",precision)
 print("Recall/Sensitivity = ",recall)
 print("Specificity = ",specificity)
 print("F1 score = ",(2*(precision)*(recall))/(precision + recall))
+print("AUC score = ",roc_auc_score(y_test, modelLogitFit.predict(pd.concat([X_test, y_test], axis=1))))
 
 # %%
 # Cross fold validations
@@ -281,34 +288,55 @@ from sklearn.svm import SVC, LinearSVC
 clf1 = LinearSVC()
 clf2 = SVC(kernel="linear")
 clf3 = SVC()
-classifiers = [clf1,clf2,clf3] 
+clf4 = SVC(kernel='rbf', probability=True, C=1, gamma=0.1)
+classifiers = [clf1,clf2,clf3, clf4] 
 
 # for c in classifiers:
 #     print("Classifier: ",c)
 #     c.fit(os_data_X,os_data_y) 
 #     print(f'svc train score:  {c.score(X_train,y_train)}')
 #     print(f'svc test score:  {c.score(X_test,y_test)}')
-#     print(confusion_matrix(y_test, c.predict(X_test)))
-#     print(classification_report(y_test, c.predict(X_test)))
+#     pred = c.predict(X_test)
+#     print(confusion_matrix(y_test, pred))
+#     print(classification_report(y_test, pred))
 clf1.fit(os_data_X, os_data_y)
 print(f'svc train score:  {clf1.score(X_train,y_train)}')
 print(f'svc test score:  {clf1.score(X_test,y_test)}')
+pred = clf1.predict(X_test)
 print(confusion_matrix(y_test, clf1.predict(X_test)))
 print(classification_report(y_test, clf1.predict(X_test)))
 
 
+#%%
+from sklearn.metrics import roc_curve
+from sklearn.metrics import auc
+
+# Compute fpr, tpr, thresholds and roc auc
+fpr, tpr, thresholds = roc_curve(y_test, pred)
+roc_auc = auc(fpr, tpr)
+
+# Plot ROC curve
+plt.plot(fpr, tpr, label='ROC curve (area = %0.3f)' % roc_auc)
+plt.plot([0, 1], [0, 1], 'k--')  # random predictions curve
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.0])
+plt.xlabel('False Positive Rate or (1 - Specifity)')
+plt.ylabel('True Positive Rate or (Sensitivity)')
+plt.title('Receiver Operating Characteristic')
+plt.legend(loc="lower right")
 # %%
 
 # SVC with different gamma values
 # took 17 mins to execute
-gammas = ["auto","scale", 0.1]
+gammas = ["auto","scale", 0.1,1]
 for gamma in gammas:
     print("GAMMA = ", gamma)
     svc = SVC(gamma=gamma).fit(os_data_X, os_data_y)
     print(f'svc train score:  {svc.score(os_data_X, os_data_y)}')
     print(f'svc test score:  {svc.score(X_test,y_test)}')
-    print(confusion_matrix(y_test, svc.predict(X_test)))
-    print(classification_report(y_test, svc.predict(X_test)))
+    pred = svc.predict(X_test)
+    print(confusion_matrix(y_test, pred))
+    print(classification_report(y_test, pred))
     
 
 # %%
