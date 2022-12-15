@@ -264,7 +264,6 @@ print(x_test.shape)
 print(y_train.shape)
 print(y_test.shape)
 
-
 x_test.head()
 
 #%%
@@ -273,13 +272,69 @@ from imblearn.over_sampling import SMOTE
 oversample = SMOTE(random_state=123)
 X_train_processed_smote, Y_train_processed_smote = oversample.fit_resample(x_train, y_train)
 
-# X_train_processed_smote,X_cv_processed_smote,Y_train_processed_smote,\
-# Y_cv_processed_smote = train_test_split(X_train_processed_smote,Y_train_processed_smote,test_size = 0.2)
-
+X_train_processed_smote,X_cv_processed_smote,Y_train_processed_smote,\
+Y_cv_processed_smote = train_test_split(X_train_processed_smote,Y_train_processed_smote,test_size = 0.2)
 
 
 # %%
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.calibration import CalibratedClassifierCV
 
+
+#####################BernoulliNB#######################
+
+alpha = [0.00001,0.0005, 0.0001,0.005,0.001,0.05,0.01,0.1,0.5,1,5,10,50,100]
+cv_recall_score = []
+
+for i in alpha:
+    model = BernoulliNB(alpha = i)
+    model.fit(X_train_processed_smote,Y_train_processed_smote)
+    CV = CalibratedClassifierCV(model,method = 'sigmoid')
+    CV.fit(X_train_processed_smote,Y_train_processed_smote)
+    predicted = CV.predict(X_cv_processed_smote)
+    cv_recall_score.append(recall_score(Y_cv_processed_smote,predicted))
+for i in range(0,len(cv_recall_score)):
+    print('Recall value for apha =' + str(alpha[i]) + ' is ' + str(cv_recall_score[i]))
+plt.plot(alpha,cv_recall_score,c='r')
+plt.xlabel('alpha(n_estimators)')
+plt.ylabel('recall score')
+plt.title('alpha vs recall_score')
+
+
+#%%
+for i,score in enumerate(cv_recall_score):
+    plt.annotate((alpha[i],np.round(score,4)),(alpha[i],np.round(cv_recall_score[i],4)))
+
+index = cv_recall_score.index(max(cv_recall_score))
+best_alpha = alpha[index]
+print('best alpha is ' + str(best_alpha))
+model = BernoulliNB(alpha = best_alpha)
+model.fit(X_train_processed_smote,Y_train_processed_smote)
+predict_train = model.predict(X_train_processed_smote)
+print('recall score on train data ' + str(recall_score(Y_train_processed_smote,predict_train)))
+train_mat = confusion_matrix(Y_train_processed_smote,predict_train)
+predict_cv = model.predict(X_cv_processed_smote)
+print('recall score on test data ' + str(recall_score(Y_cv_processed_smote,predict_cv)))
+cv_mat = confusion_matrix(Y_cv_processed_smote,predict_cv)
+predict_test = model.predict(x_test)
+print('recall score on test data ' + str(recall_score(y_test,predict_test)))
+test_mat = confusion_matrix(y_test,predict_test)
+fig,ax = plt.subplots(1,3,figsize = (15,5))
+sns.heatmap(ax = ax[0],data = train_mat,annot=True,fmt='g',cmap="YlGnBu")
+ax[0].set_xlabel('predicted')
+ax[0].set_ylabel('actual')
+ax[0].title.set_text('confusion matrix for train data')
+sns.heatmap(ax = ax[1],data = cv_mat,annot=True,fmt='g')
+ax[1].set_xlabel('predicted')
+ax[1].set_ylabel('actual')
+ax[1].title.set_text('confusion matrix for CV data')
+sns.heatmap(ax = ax[2],data = test_mat,annot=True,fmt='g')
+ax[2].set_xlabel('predicted')
+ax[2].set_ylabel('actual')
+ax[2].title.set_text('confusion matrix for test data')
+
+
+#%%
 #Random forest updated with gridsearch 
 
 from sklearn.model_selection import GridSearchCV
