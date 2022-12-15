@@ -26,6 +26,16 @@ subscription_not_taken = df[df['is_subscribed']=='no']
 sns.boxplot(data = df,x = 'is_subscribed', y = 'duration')
 
 
+#%%
+fig,ax = plt.subplots(1,2,figsize = (10,5))
+sns.violinplot(ax = ax[0],x = subscription_taken['duration'])
+ax[0].title.set_text('subsciption taken')
+ax[0].set(xlabel='duration(in Seconds)')
+sns.violinplot(ax = ax[1],x = subscription_not_taken['duration'])
+ax[1].title.set_text('subsciption not taken')
+ax[1].set(xlabel='duration(in Seconds)')
+
+
 # %%
 #####################((Poutcome)previous Campaign outcome)###################
 print('Poutcome')
