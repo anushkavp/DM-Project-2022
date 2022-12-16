@@ -446,3 +446,30 @@ ax[1].title.set_text('confusion matrix for test data')
 from sklearn.metrics import classification_report
 y_true, y_pred = y_test, model.predict(x_test)
 print(classification_report(y_true, y_pred))
+
+#AUC ROC Curve
+# %%
+# predict probabilities
+lr_probs = model.predict_proba(x_test)
+ns_probs = [0 for _ in range(len(y_test))]
+# keep probabilities for the positive outcome only
+lr_probs = lr_probs[:, 1]
+# calculate scores
+ns_auc = roc_auc_score(y_test, ns_probs)
+lr_auc = roc_auc_score(y_test, lr_probs)
+# summarize scores
+print('No Skill: ROC AUC=%.3f' % (ns_auc))
+print('Random Forest: ROC AUC=%.3f' % (lr_auc))
+# calculate roc curves
+ns_fpr, ns_tpr, _ = roc_curve(y_test, ns_probs)
+lr_fpr, lr_tpr, _ = roc_curve(y_test, lr_probs)
+# plot the roc curve for the model
+pyplot.plot(ns_fpr, ns_tpr, linestyle='--', label='No Skill')
+pyplot.plot(lr_fpr, lr_tpr, marker='.', label='Logistic')
+# axis labels
+pyplot.xlabel('False Positive Rate')
+pyplot.ylabel('True Positive Rate')
+# show the legend
+pyplot.legend()
+# show the plot
+pyplot.show()
