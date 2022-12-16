@@ -400,3 +400,49 @@ sns.heatmap(ax = ax[1],data = test_mat,annot=True,fmt='g')
 ax[1].set_xlabel('predicted')
 ax[1].set_ylabel('actual')
 ax[1].title.set_text('confusion matrix for test data')
+
+
+
+######Hyperparameter tuning based on nested for loop#######
+
+
+# %%
+estimator = [5,10,15,20,50,100,200]
+depth = [1,3,5,8,10,12,15,20,30]
+for i in estimator:
+    for j in depth:
+        print('#####model with estimator {0} and depth {1}######'.format(i,j))
+        model = RandomForestClassifier(n_estimators = i,max_depth = j)
+        model.fit(X_train_processed_smote,Y_train_processed_smote)
+        predict_train = model.predict(X_train_processed_smote)
+        print('recall score on train data ' + str(recall_score(Y_train_processed_smote,predict_train)))
+        train_mat = confusion_matrix(Y_train_processed_smote,predict_train)
+        predict_test = model.predict(x_test)
+        print('recall score on test data ' + str(recall_score(y_test,predict_test)))
+
+
+
+#%%
+model = RandomForestClassifier(n_estimators = 100,max_depth = 8)
+model.fit(X_train_processed_smote,Y_train_processed_smote)
+predict_train = model.predict(x_train)
+print('recall score on train data ' + str(recall_score(y_train,predict_train)))
+train_mat = confusion_matrix(y_train,predict_train)
+predict_test = model.predict(x_test)
+print('recall score on test data ' + str(recall_score(y_test,predict_test)))
+test_mat = confusion_matrix(y_test,predict_test)
+fig,ax = plt.subplots(1,2,figsize = (15,5))
+sns.heatmap(ax = ax[0],data = train_mat,annot=True,fmt='g',cmap="YlGnBu")
+ax[0].set_xlabel('predicted')
+ax[0].set_ylabel('actual')
+ax[0].title.set_text('confusion matrix for train data')
+sns.heatmap(ax = ax[1],data = test_mat,annot=True,fmt='g')
+ax[1].set_xlabel('predicted')
+ax[1].set_ylabel('actual')
+ax[1].title.set_text('confusion matrix for test data')
+
+
+#%%
+from sklearn.metrics import classification_report
+y_true, y_pred = y_test, model.predict(x_test)
+print(classification_report(y_true, y_pred))
