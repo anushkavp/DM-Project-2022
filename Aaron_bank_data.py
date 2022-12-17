@@ -29,6 +29,7 @@ df['poutcome'] = df['poutcome'].astype("category")
 sns.set_style("whitegrid")
 sns.set(rc={'figure.figsize':(11.7,8.27)})
 sns.boxplot(x=df["age"], data=df, color='red').set(title='Client Ages', xlabel="Age")
+
 #%% 
 # Ages Based on Y Target
 sns.set_style("whitegrid")
@@ -145,12 +146,17 @@ plt.show()
 # %%
 # Chi-Squared Tests on Categorical Variables Against Y Target
 #
+
+catName = ['job', 'marital', 'education', 'default', 'housing', 'loan', 'contact', 'month', 'poutcome']
+pValue = []
+
 job_crosstab = pd.crosstab(df['y'],
                             df['job'], 
                                margins = False)
 print(job_crosstab)
 job_chisq = stats.chi2_contingency(job_crosstab)
 print("P-value for job: ", job_chisq[1])
+pValue.append(job_chisq[1])
 if job_chisq[1] < 0.05:
     print("Significant")
 else:
@@ -163,6 +169,7 @@ marital_crosstab = pd.crosstab(df['y'],
 print(marital_crosstab)
 marital_chisq = stats.chi2_contingency(marital_crosstab)
 print("P-value for marital: ", marital_chisq[1])
+pValue.append(marital_chisq[1])
 if marital_chisq[1] < 0.05:
     print("Significant")
 else:
@@ -175,6 +182,7 @@ education_crosstab = pd.crosstab(df['y'],
 print(education_crosstab)
 education_chisq = stats.chi2_contingency(education_crosstab)
 print("P-value for education: ", education_chisq[1])
+pValue.append(education_chisq[1])
 if education_chisq[1] < 0.05:
     print("Significant")
 else:
@@ -187,6 +195,7 @@ default_crosstab = pd.crosstab(df['y'],
 print(default_crosstab)
 default_chisq = stats.chi2_contingency(default_crosstab)
 print("P-value for default: ", default_chisq[1])
+pValue.append(default_chisq[1])
 if default_chisq[1] < 0.05:
     print("Significant")
 else:
@@ -199,6 +208,7 @@ housing_crosstab = pd.crosstab(df['y'],
 print(housing_crosstab)
 housing_chisq = stats.chi2_contingency(housing_crosstab)
 print("P-value for housing: ", housing_chisq[1])
+pValue.append(housing_chisq[1])
 if housing_chisq[1] < 0.05:
     print("Significant")
 else:
@@ -211,6 +221,7 @@ loan_crosstab = pd.crosstab(df['y'],
 print(loan_crosstab)
 loan_chisq = stats.chi2_contingency(loan_crosstab)
 print("P-value for loan: ", loan_chisq[1])
+pValue.append(loan_chisq[1])
 if loan_chisq[1] < 0.05:
     print("Significant")
 else:
@@ -223,6 +234,7 @@ contact_crosstab = pd.crosstab(df['y'],
 print(contact_crosstab)
 contact_chisq = stats.chi2_contingency(contact_crosstab)
 print("P-value for contact: ", contact_chisq[1])
+pValue.append(contact_chisq[1])
 if contact_chisq[1] < 0.05:
     print("Significant")
 else:
@@ -235,6 +247,7 @@ month_crosstab = pd.crosstab(df['y'],
 print(month_crosstab)
 month_chisq = stats.chi2_contingency(month_crosstab)
 print("P-value for month: ", month_chisq[1])
+pValue.append(month_chisq[1])
 if month_chisq[1] < 0.05:
     print("Significant")
 else:
@@ -247,11 +260,20 @@ poutcome_crosstab = pd.crosstab(df['y'],
 print(poutcome_crosstab)
 poutcome_chisq = stats.chi2_contingency(poutcome_crosstab)
 print("P-value for poutcome: ", poutcome_chisq[1])
+pValue.append(poutcome_chisq[1])
 if poutcome_chisq[1] < 0.05:
     print("Significant")
 else:
     print("Not Significant")
 print()
+
+#%%
+# Chisq Plot
+
+cat_pval = pd.DataFrame(catName, columns=['Category_Name'])
+cat_pval['P-Value'] = pValue
+
+
 
 #%%
 # Preprocess
@@ -297,7 +319,7 @@ from sklearn.model_selection import cross_validate
 from sklearn.model_selection import cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
 
-for k in (3,5,7,9,11,13,15):
+for k in (3,5):
     knn_full = KNeighborsClassifier(n_neighbors=k) 
     knn_full.fit(x_train,y_train)
     ytest_pred = knn_full.predict(x_test)
@@ -314,7 +336,7 @@ x_model_red = x_model.copy()
 x_model_red = x_model_red.drop(columns=['job', 'marital', 'day', 'poutcome'])
 x_train_red, x_test_red, y_train_red, y_test_red = train_test_split(x_model_red,y_model,test_size = 0.3,random_state=10)
 
-for k in (3,5,7,9,11,13,15):
+for k in (3,5):
     knn_red = KNeighborsClassifier(n_neighbors=k) 
     knn_red.fit(x_train_red, y_train_red)
     ytest_pred_red = knn_red.predict(x_test_red)
@@ -330,7 +352,7 @@ for k in (3,5,7,9,11,13,15):
 from imblearn.over_sampling import SMOTE
 smote = SMOTE(random_state=123)
 x_train_smote, y_train_smote=smote.fit_resample(x_train, y_train)
-for k in (3,5,7,9,11,13,15):
+for k in (3,5):
     knn_smote_full = KNeighborsClassifier(n_neighbors=k) 
     knn_smote_full.fit(x_train_smote, y_train_smote)
     ytest_pred_smote = knn_smote_full.predict(x_test)
@@ -355,23 +377,6 @@ for k in (3,5,7,9,11,13,15):
     print(confusion_matrix(y_test_red, ytest_pred_smote_red))
     print()
 
-
-#%%
-# from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, f1_score
-# knn_cvs = KNeighborsClassifier(n_neighbors=15)
-# scoring = {'accuracy' : make_scorer(accuracy_score), 
-#            'precision' : make_scorer(precision_score),
-#            'recall' : make_scorer(recall_score), 
-#            'f1_score' : make_scorer(f1_score)}
-# xmodel_result = cross_validate(knn_cvs, x_train_smote, y_train_smote, cv=10, scoring=scoring)
-# knn_cvs.fit(x_train_smote, y_train_smote)
-# knn_cvs.score(x_train_smote, y_train_smote)
-# print("Accuracy: ",xmodel_result['test_accuracy'].mean())
-# print("Precision: ",xmodel_result['test_precision'].mean())
-# print("Recall: ",xmodel_result['test_recall'].mean())
-# print("F1 Score: ",xmodel_result['test_f1_score'].mean())
-
-
 # %%
 knn_cvs = KNeighborsClassifier(n_neighbors=13)
 xmodel_result = cross_val_score(knn_cvs, x_train_smote, y_train_smote, cv=10)
@@ -379,7 +384,7 @@ knn_cvs.fit(x_train_smote, y_train_smote)
 knn_cvs.score(x_train_smote, y_train_smote)
 
 #%%
-#
+# KNN - SMOTE RED
 from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
 
@@ -399,4 +404,94 @@ plt.ylabel('True Positive Rate')
 plt.xlabel('False Positive Rate')
 plt.title('ROC Curve of kNN')
 plt.show()
+
+#%%
+# KNN - SMOTE Full
+
+knn_smote_f = KNeighborsClassifier(n_neighbors=3) 
+knn_smote_f.fit(x_train_smote, y_train_smote)
+ytest_pred_f = knn_smote_f.predict(x_test)
+fpr, tpr, threshold = roc_curve(y_test, ytest_pred_f)
+roc_auc = auc(fpr, tpr)
+
+plt.title('Receiver Operating Characteristic')
+plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
+plt.legend(loc = 'lower right')
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0, 1])
+plt.ylim([0, 1])
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.title('ROC Curve of kNN')
+plt.show()
+
+#%%
+# KNN - Full Reduced
+
+knn_f = KNeighborsClassifier(n_neighbors=3) 
+knn_f.fit(x_train_red, y_train_red)
+ytest_pred_f = knn_f.predict(x_test_red)
+fpr, tpr, threshold = roc_curve(y_test_red, ytest_pred_f)
+roc_auc = auc(fpr, tpr)
+
+plt.title('Receiver Operating Characteristic')
+plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
+plt.legend(loc = 'lower right')
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0, 1])
+plt.ylim([0, 1])
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.title('ROC Curve of kNN - Reduced Variables')
+plt.show()
+
+#%%
+# KNN - Full 
+
+knn_f = KNeighborsClassifier(n_neighbors=3) 
+knn_f.fit(x_train, y_train)
+ytest_pred_f = knn_f.predict(x_test)
+fpr, tpr, threshold = roc_curve(y_test, ytest_pred_f)
+roc_auc = auc(fpr, tpr)
+
+plt.title('Receiver Operating Characteristic')
+plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
+plt.legend(loc = 'lower right')
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0, 1])
+plt.ylim([0, 1])
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.title('ROC Curve of kNN - Full Model')
+plt.show()
+
+
+
+#%%
+# K-means 
+# 
+from sklearn.cluster import KMeans
+
+km_model = KMeans( n_clusters=3, init='random', n_init=10, max_iter=300, tol=1e-04, random_state=0 )
+y_km = km_model.fit_predict(x_model)
+
+#%%
+# plot
+# plot the 3 clusters
+index1 = 0
+index2 = 5
+
+plt.scatter( x_model[y_km==0].iloc[:,index1], x_model[y_km==0].iloc[:,index2], s=50, c='lightgreen', marker='s', edgecolor='black', label='cluster 1' )
+
+plt.scatter( x_model[y_km==1].iloc[:,index1], x_model[y_km==1].iloc[:,index2], s=50, c='orange', marker='o', edgecolor='black', label='cluster 2' )
+
+plt.scatter( x_model[y_km==2].iloc[:,index1], x_model[y_km==2].iloc[:,index2], s=50, c='lightblue', marker='v', edgecolor='black', label='cluster 3' )
+
+# plot the centroids
+plt.scatter( km_model.cluster_centers_[:, index1], km_model.cluster_centers_[:, index2], s=250, marker='*', c='red', edgecolor='black', label='centroids' )
+plt.legend(scatterpoints=1)
+plt.grid()
+plt.show()
+
+print(classification_report(df['Cluster'],kmeans.labels_))
 # %%
