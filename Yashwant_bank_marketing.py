@@ -2,6 +2,16 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from lightgbm import LGBMClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import recall_score
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_curve
+from matplotlib import pyplot
+from sklearn.preprocessing import StandardScaler
+import copy
+
 pd.set_option('display.max_columns', None)
 
 
@@ -24,6 +34,16 @@ subscription_not_taken = df[df['is_subscribed']=='no']
 
 # %%
 sns.boxplot(data = df,x = 'is_subscribed', y = 'duration')
+
+
+#%%
+fig,ax = plt.subplots(1,2,figsize = (10,5))
+sns.violinplot(ax = ax[0],x = subscription_taken['duration'])
+ax[0].title.set_text('subsciption taken')
+ax[0].set(xlabel='duration(in Seconds)')
+sns.violinplot(ax = ax[1],x = subscription_not_taken['duration'])
+ax[1].title.set_text('subsciption not taken')
+ax[1].set(xlabel='duration(in Seconds)')
 
 
 # %%
@@ -195,4 +215,261 @@ ax[1].violinplot(subscription_not_taken['previous'])
 ax[1].title.set_text('subsciption not taken')
 ax[1].set(ylabel = 'number of previous call')
 
+
+#%%
+
+
+std_scl = StandardScaler()
+new_df = copy.deepcopy(df)
+new_df['age_Scaled'] = std_scl.fit_transform(df['age'].values.reshape(-1,1))
+new_df['balance_Scaled'] = std_scl.fit_transform(df['balance'].values.reshape(-1,1))
+new_df['duration_scaled'] = std_scl.fit_transform(df['duration'].values.reshape(-1,1))
+new_df['pdays_scaled'] = std_scl.fit_transform(df['pdays'].values.reshape(-1,1))
+new_df['previous_scaled'] = std_scl.fit_transform(df['previous'].values.reshape(-1,1))
+new_df['day_scaled'] = std_scl.fit_transform(df['day'].values.reshape(-1,1))
+new_df['campaign_scaled'] = std_scl.fit_transform(df['campaign'].values.reshape(-1,1))
+new_df.head()
+#%%
+from sklearn.preprocessing import LabelEncoder
+encode = LabelEncoder()
+new_df['month_encoded'] = encode.fit_transform(df['month'])
+new_df['job_encoded'] = encode.fit_transform(df['job'])
+new_df['marital_encoded'] = encode.fit_transform(df['marital'])
+new_df['education_encoded'] = encode.fit_transform(df['education'])
+new_df['contact_encoded'] = encode.fit_transform(df['contact'])
+new_df['poutcome_encoded'] = encode.fit_transform(df['poutcome'])
+
+
+#%%
+new_df['default_encoded'] = df['default'].map({'no':0,'yes':1})
+new_df['housing_encoded'] = df['housing'].map({'no':0,'yes':1})
+new_df['loan_encoded'] = df['loan'].map({'no':0,'yes':1})
+new_df['is_subscribed_label'] = df['is_subscribed'].map({'no':0,'yes':1})
+
+
+best_feature_df = new_df[['age_Scaled', 'default_encoded', 'balance_Scaled', 'housing_encoded', 'loan_encoded', 'contact_encoded', 'duration_scaled',
+       'campaign_scaled', 'pdays_scaled', 'previous_scaled','is_subscribed_label']]
+
+
+best_feature_df.head()
+
+
+
+####Data splitting
+
+from sklearn.model_selection import train_test_split
+x_train,x_test,y_train,y_test = train_test_split(best_feature_df.drop(columns = ['is_subscribed_label'], axis = 1),best_feature_df['is_subscribed_label'],test_size = 0.20)
+print(x_train.shape)
+print(x_test.shape)
+print(y_train.shape)
+print(y_test.shape)
+
+x_test.head()
+
+#%%
+from imblearn.over_sampling import SMOTE
+
+oversample = SMOTE(random_state=123)
+X_train_processed_smote, Y_train_processed_smote = oversample.fit_resample(x_train, y_train)
+
+X_train_processed_smote,X_cv_processed_smote,Y_train_processed_smote,\
+Y_cv_processed_smote = train_test_split(X_train_processed_smote,Y_train_processed_smote,test_size = 0.2)
+
+
 # %%
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.calibration import CalibratedClassifierCV
+
+
+#####################BernoulliNB#######################
+
+alpha = [0.00001,0.0005, 0.0001,0.005,0.001,0.05,0.01,0.1,0.5,1,5,10,50,100]
+cv_recall_score = []
+
+for i in alpha:
+    model = BernoulliNB(alpha = i)
+    model.fit(X_train_processed_smote,Y_train_processed_smote)
+    CV = CalibratedClassifierCV(model,method = 'sigmoid')
+    CV.fit(X_train_processed_smote,Y_train_processed_smote)
+    predicted = CV.predict(X_cv_processed_smote)
+    cv_recall_score.append(recall_score(Y_cv_processed_smote,predicted))
+for i in range(0,len(cv_recall_score)):
+    print('Recall value for apha =' + str(alpha[i]) + ' is ' + str(cv_recall_score[i]))
+plt.plot(alpha,cv_recall_score,c='r')
+plt.xlabel('alpha(n_estimators)')
+plt.ylabel('recall score')
+plt.title('alpha vs recall_score')
+
+
+#%%
+for i,score in enumerate(cv_recall_score):
+    plt.annotate((alpha[i],np.round(score,4)),(alpha[i],np.round(cv_recall_score[i],4)))
+
+index = cv_recall_score.index(max(cv_recall_score))
+best_alpha = alpha[index]
+print('best alpha is ' + str(best_alpha))
+model = BernoulliNB(alpha = best_alpha)
+model.fit(X_train_processed_smote,Y_train_processed_smote)
+predict_train = model.predict(X_train_processed_smote)
+print('recall score on train data ' + str(recall_score(Y_train_processed_smote,predict_train)))
+train_mat = confusion_matrix(Y_train_processed_smote,predict_train)
+predict_cv = model.predict(X_cv_processed_smote)
+print('recall score on test data ' + str(recall_score(Y_cv_processed_smote,predict_cv)))
+cv_mat = confusion_matrix(Y_cv_processed_smote,predict_cv)
+predict_test = model.predict(x_test)
+print('recall score on test data ' + str(recall_score(y_test,predict_test)))
+test_mat = confusion_matrix(y_test,predict_test)
+fig,ax = plt.subplots(1,3,figsize = (15,5))
+sns.heatmap(ax = ax[0],data = train_mat,annot=True,fmt='g',cmap="YlGnBu")
+ax[0].set_xlabel('predicted')
+ax[0].set_ylabel('actual')
+ax[0].title.set_text('confusion matrix for train data')
+sns.heatmap(ax = ax[1],data = cv_mat,annot=True,fmt='g')
+ax[1].set_xlabel('predicted')
+ax[1].set_ylabel('actual')
+ax[1].title.set_text('confusion matrix for CV data')
+sns.heatmap(ax = ax[2],data = test_mat,annot=True,fmt='g')
+ax[2].set_xlabel('predicted')
+ax[2].set_ylabel('actual')
+ax[2].title.set_text('confusion matrix for test data')
+
+
+#%%
+#Random forest updated with gridsearch 
+
+from sklearn.model_selection import GridSearchCV
+params = [{'n_estimators' : [10,20,50,100,200,400,500],
+         'max_depth': [1,5,10,20,30,50,100]}]
+rf = RandomForestClassifier()
+rf_gs = GridSearchCV(rf,param_grid=params,
+                      scoring='recall',
+                      cv=5)
+rf_gs.fit(X_train_processed_smote, Y_train_processed_smote)
+rf_gs.best_params_
+
+
+# %%
+model = RandomForestClassifier(n_estimators = 100,max_depth = 8)
+model.fit(X_train_processed_smote,Y_train_processed_smote)
+predict_train = model.predict(x_train)
+print('recall score on train data ' + str(recall_score(y_train,predict_train)))
+train_mat = confusion_matrix(y_train,predict_train)
+predict_test = model.predict(x_test)
+print('recall score on test data ' + str(recall_score(y_test,predict_test)))
+test_mat = confusion_matrix(y_test,predict_test)
+fig,ax = plt.subplots(1,2,figsize = (15,5))
+sns.heatmap(ax = ax[0],data = train_mat,annot=True,fmt='g',cmap="YlGnBu")
+ax[0].set_xlabel('predicted')
+ax[0].set_ylabel('actual')
+ax[0].title.set_text('confusion matrix for train data')
+sns.heatmap(ax = ax[1],data = test_mat,annot=True,fmt='g')
+ax[1].set_xlabel('predicted')
+ax[1].set_ylabel('actual')
+ax[1].title.set_text('confusion matrix for test data')
+
+
+
+#%%
+###########################LGBM############################
+from sklearn.model_selection import GridSearchCV
+params = [{'n_estimators' : [10,20,50,100,200,400,500],
+         'max_depth': [1,5,10,20,30,50,100]}]
+LGBM_model = LGBMClassifier()
+rf_gs = GridSearchCV(LGBM_model,param_grid=params,
+                      scoring='recall',
+                      cv=5)
+rf_gs.fit(X_train_processed_smote, Y_train_processed_smote)
+rf_gs.best_params_
+
+
+# %%
+model = LGBMClassifier(n_estimators = 100,max_depth = 8)
+model.fit(X_train_processed_smote,Y_train_processed_smote)
+predict_train = model.predict(x_train)
+print('recall score on train data ' + str(recall_score(y_train,predict_train)))
+train_mat = confusion_matrix(y_train,predict_train)
+predict_test = model.predict(x_test)
+print('recall score on test data ' + str(recall_score(y_test,predict_test)))
+test_mat = confusion_matrix(y_test,predict_test)
+fig,ax = plt.subplots(1,2,figsize = (15,5))
+sns.heatmap(ax = ax[0],data = train_mat,annot=True,fmt='g',cmap="YlGnBu")
+ax[0].set_xlabel('predicted')
+ax[0].set_ylabel('actual')
+ax[0].title.set_text('confusion matrix for train data')
+sns.heatmap(ax = ax[1],data = test_mat,annot=True,fmt='g')
+ax[1].set_xlabel('predicted')
+ax[1].set_ylabel('actual')
+ax[1].title.set_text('confusion matrix for test data')
+
+
+
+######Hyperparameter tuning based on nested for loop#######
+
+
+# %%
+estimator = [5,10,15,20,50,100,200]
+depth = [1,3,5,8,10,12,15,20,30]
+for i in estimator:
+    for j in depth:
+        print('#####model with estimator {0} and depth {1}######'.format(i,j))
+        model = RandomForestClassifier(n_estimators = i,max_depth = j)
+        model.fit(X_train_processed_smote,Y_train_processed_smote)
+        predict_train = model.predict(X_train_processed_smote)
+        print('recall score on train data ' + str(recall_score(Y_train_processed_smote,predict_train)))
+        train_mat = confusion_matrix(Y_train_processed_smote,predict_train)
+        predict_test = model.predict(x_test)
+        print('recall score on test data ' + str(recall_score(y_test,predict_test)))
+
+
+
+#%%
+model = RandomForestClassifier(n_estimators = 100,max_depth = 8)
+model.fit(X_train_processed_smote,Y_train_processed_smote)
+predict_train = model.predict(x_train)
+print('recall score on train data ' + str(recall_score(y_train,predict_train)))
+train_mat = confusion_matrix(y_train,predict_train)
+predict_test = model.predict(x_test)
+print('recall score on test data ' + str(recall_score(y_test,predict_test)))
+test_mat = confusion_matrix(y_test,predict_test)
+fig,ax = plt.subplots(1,2,figsize = (15,5))
+sns.heatmap(ax = ax[0],data = train_mat,annot=True,fmt='g',cmap="YlGnBu")
+ax[0].set_xlabel('predicted')
+ax[0].set_ylabel('actual')
+ax[0].title.set_text('confusion matrix for train data')
+sns.heatmap(ax = ax[1],data = test_mat,annot=True,fmt='g')
+ax[1].set_xlabel('predicted')
+ax[1].set_ylabel('actual')
+ax[1].title.set_text('confusion matrix for test data')
+
+
+#%%
+from sklearn.metrics import classification_report
+y_true, y_pred = y_test, model.predict(x_test)
+print(classification_report(y_true, y_pred))
+
+#AUC ROC Curve
+# %%
+# predict probabilities
+lr_probs = model.predict_proba(x_test)
+ns_probs = [0 for _ in range(len(y_test))]
+# keep probabilities for the positive outcome only
+lr_probs = lr_probs[:, 1]
+# calculate scores
+ns_auc = roc_auc_score(y_test, ns_probs)
+lr_auc = roc_auc_score(y_test, lr_probs)
+# summarize scores
+print('No Skill: ROC AUC=%.3f' % (ns_auc))
+print('Random Forest: ROC AUC=%.3f' % (lr_auc))
+# calculate roc curves
+ns_fpr, ns_tpr, _ = roc_curve(y_test, ns_probs)
+lr_fpr, lr_tpr, _ = roc_curve(y_test, lr_probs)
+# plot the roc curve for the model
+pyplot.plot(ns_fpr, ns_tpr, linestyle='--', label='No Skill')
+pyplot.plot(lr_fpr, lr_tpr, marker='.', label='Logistic')
+# axis labels
+pyplot.xlabel('False Positive Rate')
+pyplot.ylabel('True Positive Rate')
+# show the legend
+pyplot.legend()
+# show the plot
+pyplot.show()
