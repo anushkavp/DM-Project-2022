@@ -258,19 +258,19 @@ best_feature_df.head()
 ####Data splitting
 
 from sklearn.model_selection import train_test_split
-x_train,x_test,y_train,y_test = train_test_split(best_feature_df.drop(columns = ['is_subscribed_label'], axis = 1),best_feature_df['is_subscribed_label'],test_size = 0.20)
-print(x_train.shape)
-print(x_test.shape)
+X_train,X_test,y_train,y_test = train_test_split(best_feature_df.drop(columns = ['is_subscribed_label'], axis = 1),best_feature_df['is_subscribed_label'],test_size = 0.20)
+print(X_train.shape)
+print(X_test.shape)
 print(y_train.shape)
 print(y_test.shape)
 
-x_test.head()
+X_test.head()
 
 #%%
 from imblearn.over_sampling import SMOTE
 
 oversample = SMOTE(random_state=123)
-X_train_processed_smote, Y_train_processed_smote = oversample.fit_resample(x_train, y_train)
+X_train_processed_smote, Y_train_processed_smote = oversample.fit_resample(X_train, y_train)
 
 X_train_processed_smote,X_cv_processed_smote,Y_train_processed_smote,\
 Y_cv_processed_smote = train_test_split(X_train_processed_smote,Y_train_processed_smote,test_size = 0.2)
@@ -316,7 +316,7 @@ train_mat = confusion_matrix(Y_train_processed_smote,predict_train)
 predict_cv = model.predict(X_cv_processed_smote)
 print('recall score on test data ' + str(recall_score(Y_cv_processed_smote,predict_cv)))
 cv_mat = confusion_matrix(Y_cv_processed_smote,predict_cv)
-predict_test = model.predict(x_test)
+predict_test = model.predict(X_test)
 print('recall score on test data ' + str(recall_score(y_test,predict_test)))
 test_mat = confusion_matrix(y_test,predict_test)
 fig,ax = plt.subplots(1,3,figsize = (15,5))
@@ -351,10 +351,10 @@ rf_gs.best_params_
 # %%
 model = RandomForestClassifier(n_estimators = 100,max_depth = 8)
 model.fit(X_train_processed_smote,Y_train_processed_smote)
-predict_train = model.predict(x_train)
+predict_train = model.predict(X_train)
 print('recall score on train data ' + str(recall_score(y_train,predict_train)))
 train_mat = confusion_matrix(y_train,predict_train)
-predict_test = model.predict(x_test)
+predict_test = model.predict(X_test)
 print('recall score on test data ' + str(recall_score(y_test,predict_test)))
 test_mat = confusion_matrix(y_test,predict_test)
 fig,ax = plt.subplots(1,2,figsize = (15,5))
@@ -385,10 +385,10 @@ rf_gs.best_params_
 # %%
 model = LGBMClassifier(n_estimators = 100,max_depth = 8)
 model.fit(X_train_processed_smote,Y_train_processed_smote)
-predict_train = model.predict(x_train)
+predict_train = model.predict(X_train)
 print('recall score on train data ' + str(recall_score(y_train,predict_train)))
 train_mat = confusion_matrix(y_train,predict_train)
-predict_test = model.predict(x_test)
+predict_test = model.predict(X_test)
 print('recall score on test data ' + str(recall_score(y_test,predict_test)))
 test_mat = confusion_matrix(y_test,predict_test)
 fig,ax = plt.subplots(1,2,figsize = (15,5))
@@ -417,7 +417,7 @@ for i in estimator:
         predict_train = model.predict(X_train_processed_smote)
         print('recall score on train data ' + str(recall_score(Y_train_processed_smote,predict_train)))
         train_mat = confusion_matrix(Y_train_processed_smote,predict_train)
-        predict_test = model.predict(x_test)
+        predict_test = model.predict(X_test)
         print('recall score on test data ' + str(recall_score(y_test,predict_test)))
 
 
@@ -425,10 +425,10 @@ for i in estimator:
 #%%
 model = RandomForestClassifier(n_estimators = 100,max_depth = 8)
 model.fit(X_train_processed_smote,Y_train_processed_smote)
-predict_train = model.predict(x_train)
+predict_train = model.predict(X_train)
 print('recall score on train data ' + str(recall_score(y_train,predict_train)))
 train_mat = confusion_matrix(y_train,predict_train)
-predict_test = model.predict(x_test)
+predict_test = model.predict(X_test)
 print('recall score on test data ' + str(recall_score(y_test,predict_test)))
 test_mat = confusion_matrix(y_test,predict_test)
 fig,ax = plt.subplots(1,2,figsize = (15,5))
@@ -444,13 +444,13 @@ ax[1].title.set_text('confusion matrix for test data')
 
 #%%
 from sklearn.metrics import classification_report
-y_true, y_pred = y_test, model.predict(x_test)
+y_true, y_pred = y_test, model.predict(X_test)
 print(classification_report(y_true, y_pred))
 
 #AUC ROC Curve
 # %%
 # predict probabilities
-lr_probs = model.predict_proba(x_test)
+lr_probs = model.predict_proba(X_test)
 ns_probs = [0 for _ in range(len(y_test))]
 # keep probabilities for the positive outcome only
 lr_probs = lr_probs[:, 1]
@@ -494,7 +494,7 @@ model.summary()
 
 
 #%%
-hist = model.fit(X_train_processed_smote, Y_train_processed_smote, validation_data=(x_test, y_test), epochs=150, batch_size=100)
+hist = model.fit(X_train_processed_smote, Y_train_processed_smote, validation_data=(X_test, y_test), epochs=150, batch_size=100)
 
 
 # %%
@@ -515,7 +515,7 @@ plt.plot()
 
 
 #%%
-y_predicted = model.predict(x_test) > 0.4
+y_predicted = model.predict(X_test) > 0.4
 mat = confusion_matrix(y_test, y_predicted)
 labels = ['0', '1']
 
