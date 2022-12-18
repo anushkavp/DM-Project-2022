@@ -473,3 +473,55 @@ pyplot.ylabel('True Positive Rate')
 pyplot.legend()
 # show the plot
 pyplot.show()
+
+
+
+#%%
+
+############Deep learning model#######################
+
+#%%
+#!pip install keras
+#!pip intall tensorflow
+from keras.models import Sequential
+from keras.layers import Dense
+
+model = Sequential() 
+model.add(Dense(10, activation='relu', input_dim=10))
+model.add(Dense(1, activation='sigmoid')) 
+model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy']) 
+model.summary()
+
+
+#%%
+hist = model.fit(X_train_processed_smote, Y_train_processed_smote, validation_data=(x_test, y_test), epochs=150, batch_size=100)
+
+
+# %%
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set()
+acc = hist.history['accuracy']
+val = hist.history['val_accuracy']
+epochs = range(1, len(acc) + 1)
+plt.plot(epochs, acc, '-', label='Training accuracy')
+plt.plot(epochs, val, ':', label='Validation accuracy')
+plt.title('Training and Validation Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend(loc='lower right')
+plt.plot()
+
+
+
+#%%
+y_predicted = model.predict(x_test) > 0.4
+mat = confusion_matrix(y_test, y_predicted)
+labels = ['0', '1']
+
+sns.heatmap(mat, square=True, annot=True, fmt='d', cbar=False, cmap='Blues',xticklabels=labels, yticklabels=labels)
+
+plt.xlabel('Predicted label')
+plt.ylabel('Actual label')
+
+
