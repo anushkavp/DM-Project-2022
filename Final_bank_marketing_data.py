@@ -339,6 +339,25 @@ ax[1].violinplot(subscription_not_taken['previous'])
 ax[1].title.set_text('subsciption not taken')
 ax[1].set(ylabel = 'number of previous call')
 
+#%%
+# 
+# is there any relationship b/w duration of the call and the contact type? 
+import plotly.express as px
+fig = px.box(df, x="contact", y="duration", color="is_subscribed")
+fig.update_layout(
+    title="Duration of call vs Contact Communication",
+    xaxis_title="Contact Communication Type",
+    yaxis_title="Duration of call (in seconds)",
+    legend_title="Subscribed?",
+)
+fig.show()
+
+#%%
+ax=sns.countplot(data=df, x="is_subscribed", hue="contact")
+ax.set_title("Contact Type vs Subscription")
+ax.set_xlabel('Term Deposit Subscribed?')
+ax.set_ylabel('Count of users')
+plt.show()
 
 
 # %%
@@ -465,4 +484,46 @@ else:
     print("Not Significant")
 print()
 
+
+#%%
+# Standard Scaling
+std_scl = StandardScaler()
+new_df = copy.deepcopy(df)
+new_df['age'] = std_scl.fit_transform(df['age'].values.reshape(-1,1))
+new_df['balance'] = std_scl.fit_transform(df['balance'].values.reshape(-1,1))
+new_df['duration'] = std_scl.fit_transform(df['duration'].values.reshape(-1,1))
+new_df['pdays'] = std_scl.fit_transform(df['pdays'].values.reshape(-1,1))
+new_df['previous'] = std_scl.fit_transform(df['previous'].values.reshape(-1,1))
+new_df['day'] = std_scl.fit_transform(df['day'].values.reshape(-1,1))
+new_df['campaign'] = std_scl.fit_transform(df['campaign'].values.reshape(-1,1))
+new_df.head()
+
+# %%
+# categorical
+from sklearn import preprocessing
+label_encoder = preprocessing.LabelEncoder()
+new_df['job']= label_encoder.fit_transform(new_df["job"]) 
+new_df['marital']= label_encoder.fit_transform(new_df["marital"]) 
+new_df['education']= label_encoder.fit_transform(new_df["education"]) 
+new_df['contact']= label_encoder.fit_transform(new_df["contact"]) 
+new_df['month']= label_encoder.fit_transform(new_df["month"])
+new_df['poutcome']= label_encoder.fit_transform(new_df["poutcome"])
+
+print(new_df.head())
+
+
+#%%
+# convert boolean into numerical
+new_df.default = new_df.default.map(dict(yes=1, no=0))
+new_df.housing = new_df.housing.map(dict(yes=1, no=0))
+new_df.loan = new_df.loan.map(dict(yes=1, no=0))
+new_df.is_subscribed = new_df.is_subscribed.map(dict(yes=1, no=0))
+
+new_df.head()
+# %%
+X, y = new_df.iloc[:, :-1], new_df.iloc[:, -1]
+# Train/test set generation
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=123
+)
 # %%
