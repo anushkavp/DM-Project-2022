@@ -693,7 +693,7 @@ from sklearn.model_selection import cross_val_score
 lr_cv_acc = cross_val_score(logisticRegr, os_data_X, os_data_y, cv= 5, scoring='accuracy' )
 print(f'LR CV accuracy score:  {lr_cv_acc}')
 
-
+#%%
 # SVC
 # (took 8 mins to execute)
 from sklearn.metrics import confusion_matrix 
@@ -738,6 +738,20 @@ plt.xlabel('False Positive Rate or (1 - Specifity)')
 plt.ylabel('True Positive Rate or (Sensitivity)')
 plt.title('Receiver Operating Characteristic')
 plt.legend(loc="lower right")
+
+#%%
+# SVC with different gamma values
+# took 17 mins to execute
+gammas = ["auto","scale", 0.1,1]
+for gamma in gammas:
+    print("GAMMA = ", gamma)
+    svc = SVC(gamma=gamma).fit(os_data_X, os_data_y)
+    print(f'svc train score:  {svc.score(os_data_X, os_data_y)}')
+    print(f'svc test score:  {svc.score(X_test,y_test)}')
+    pred = svc.predict(X_test)
+    print(confusion_matrix(y_test, pred))
+    print(classification_report(y_test, pred))
+    
 
 # %%
 # K-Nearest Neighbor - Full Model (All Variables)
@@ -898,23 +912,6 @@ plt.title('ROC Curve of kNN - Full Model')
 plt.show()
 
 
-#%%
-# SVC with different gamma values
-# took 17 mins to execute
-gammas = ["auto","scale", 0.1,1]
-for gamma in gammas:
-    print("GAMMA = ", gamma)
-    svc = SVC(gamma=gamma).fit(os_data_X, os_data_y)
-    print(f'svc train score:  {svc.score(os_data_X, os_data_y)}')
-    print(f'svc test score:  {svc.score(X_test,y_test)}')
-    pred = svc.predict(X_test)
-    print(confusion_matrix(y_test, pred))
-    print(classification_report(y_test, pred))
-    
-
-
-
-
 ######Hyperparameter tuning based on nested for loop - RandomForest classifier#######
 
 # %%
@@ -992,6 +989,8 @@ pyplot.show()
 
 # %%
 ######Hyperparameter tuning based on nested for loop - LGBM########################
+# %conda install lightgbm
+from lightgbm import LGBMClassifier
 estimator = [5,10,15,20,50,100,200]
 depth = [1,3,5,8,10,12,15,20]
 for i in estimator:
@@ -1064,8 +1063,8 @@ print(classification_report(y_true, y_pred))
 
 #%%
 ############Deep learning model#######################
-#!pip install keras
-#!pip intall tensorflow
+#%pip install keras
+#%pip install tensorflow
 from keras.models import Sequential
 from keras.layers import Dense
 
