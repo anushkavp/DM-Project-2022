@@ -628,7 +628,7 @@ plt.legend()
 plt.show()
 # %%
 # Statsmodel
-
+import numpy as np
 import statsmodels.api as sm 
 from statsmodels.formula.api import glm
 from sklearn.model_selection import train_test_split
@@ -663,11 +663,11 @@ modelpredicitons['Predictions'] = np.where(modelpredicitons['Predicted'] > cut_o
 print(modelpredicitons.Predictions.head())
 #
 # Make a cross table
-confusionmatrix = (pd.crosstab(os_test.y, modelpredicitons.Predictions,
+confusionmatrix = (pd.crosstab(os_test.is_subscribed, modelpredicitons.Predictions,
 rownames=['Actual'], colnames=['Predicted'],
 margins = True))
 
-print(pd.crosstab(os_test.y, modelpredicitons.Predictions,
+print(pd.crosstab(os_test.is_subscribed, modelpredicitons.Predictions,
 rownames=['Actual'], colnames=['Predicted'],
 margins = True))
 
@@ -738,8 +738,26 @@ plt.xlabel('False Positive Rate or (1 - Specifity)')
 plt.ylabel('True Positive Rate or (Sensitivity)')
 plt.title('Receiver Operating Characteristic')
 plt.legend(loc="lower right")
-# %%
 
+# %%
+# K-Nearest Neighbor - Full Model (All Variables)
+#
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import cross_validate
+from sklearn.model_selection import cross_val_score
+from sklearn.neighbors import KNeighborsClassifier
+
+for k in (3,5):
+    knn_full = KNeighborsClassifier(n_neighbors=k) 
+    knn_full.fit(X_train,y_train)
+    ytest_pred = knn_full.predict(X_test)
+    # Score report
+    print(k)
+    print(classification_report(y_test,ytest_pred))
+    print(confusion_matrix(y_test,ytest_pred))
+    print()
+#%%
 # SVC with different gamma values
 # took 17 mins to execute
 gammas = ["auto","scale", 0.1,1]
@@ -956,3 +974,4 @@ print(classification_report(y_true, y_predicted))
 
 
 
+# %%
