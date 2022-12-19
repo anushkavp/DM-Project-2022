@@ -628,7 +628,7 @@ plt.legend()
 plt.show()
 # %%
 # Statsmodel
-
+import numpy as np
 import statsmodels.api as sm 
 from statsmodels.formula.api import glm
 from sklearn.model_selection import train_test_split
@@ -651,7 +651,7 @@ os_data_y= pd.DataFrame(data=os_data_y)
 os_data = pd.concat([os_data_X.reset_index(drop=True), os_data_y], axis=1)
 os_test = pd.concat([X_test.reset_index(drop=True), y_test], axis=1)
 
-modelLogit = glm(formula='is_subscribed ~ C(marital)+C(education)+C(default)+C(housing)+C(loan)+C(contact)+C(month)+duration+campaign+C(poutcome)', data=os_data, family=sm.families.Binomial())
+modelLogit = glm(formula='is_subscribed ~ marital+education+default+housing+loan+contact+month+duration+campaign+poutcome', data=os_data, family=sm.families.Binomial())
 
 modelLogitFit = modelLogit.fit()
 print( modelLogitFit.summary() )
@@ -663,11 +663,11 @@ modelpredicitons['Predictions'] = np.where(modelpredicitons['Predicted'] > cut_o
 print(modelpredicitons.Predictions.head())
 #
 # Make a cross table
-confusionmatrix = (pd.crosstab(os_test.y, modelpredicitons.Predictions,
+confusionmatrix = (pd.crosstab(os_test.is_subscribed, modelpredicitons.Predictions,
 rownames=['Actual'], colnames=['Predicted'],
 margins = True))
 
-print(pd.crosstab(os_test.y, modelpredicitons.Predictions,
+print(pd.crosstab(os_test.is_subscribed, modelpredicitons.Predictions,
 rownames=['Actual'], colnames=['Predicted'],
 margins = True))
 
@@ -752,3 +752,5 @@ for gamma in gammas:
     print(confusion_matrix(y_test, pred))
     print(classification_report(y_test, pred))
     
+
+# %%
