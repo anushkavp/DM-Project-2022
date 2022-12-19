@@ -771,4 +771,207 @@ for gamma in gammas:
     print(classification_report(y_test, pred))
     
 
+
+
+
+######Hyperparameter tuning based on nested for loop - RandomForest classifier#######
+
+# %%
+estimator = [5,10,15,20,50,100,200]
+depth = [1,3,5,8,10,12,15,20,30]
+for i in estimator:
+    for j in depth:
+        print('#####model with estimator {0} and depth {1}######'.format(i,j))
+        model = RandomForestClassifier(n_estimators = i,max_depth = j)
+        model.fit(os_data_X,os_data_y)
+        predict_train = model.predict(X_train)
+        print('recall score on train data ' + str(recall_score(y_train,predict_train)))
+        train_mat = confusion_matrix(y_train,predict_train)
+        predict_test = model.predict(X_test)
+        print('recall score on test data ' + str(recall_score(y_test,predict_test)))
+
+#Picking estimator and depth of the best model and feeding it to the final best model learning
+
+#%%
+model = RandomForestClassifier(n_estimators = 100,max_depth = 3)
+model.fit(os_data_X,os_data_y)
+predict_train = model.predict(X_train)
+print('recall score on train data ' + str(recall_score(y_train,predict_train)))
+train_mat = confusion_matrix(y_train,predict_train)
+
+predict_test = model.predict(X_test)
+print('recall score on test data ' + str(recall_score(y_test,predict_test)))
+test_mat = confusion_matrix(y_test,predict_test)
+
+fig,ax = plt.subplots(1,2,figsize = (15,5))
+sns.heatmap(ax = ax[0],data = train_mat,annot=True,fmt='g',cmap="YlGnBu")
+ax[0].set_xlabel('predicted')
+ax[0].set_ylabel('actual')
+ax[0].title.set_text('confusion matrix for train data')
+sns.heatmap(ax = ax[1],data = test_mat,annot=True,fmt='g')
+ax[1].set_xlabel('predicted')
+ax[1].set_ylabel('actual')
+ax[1].title.set_text('confusion matrix for test data')
+
+#We are getting similar recall value for train and test data. It means the model is perfectly balanced(there is no overfitting and underfitting)
+#%%
+from sklearn.metrics import classification_report
+y_true, y_pred = y_test, model.predict(X_test)
+print(classification_report(y_true, y_pred))
+
+#AUC ROC Curve
+# %%
+# predict probabilities
+lr_probs = model.predict_proba(X_test)
+ns_probs = [0 for _ in range(len(y_test))]
+# keep probabilities for the positive outcome only
+lr_probs = lr_probs[:, 1]
+# calculate scores
+ns_auc = roc_auc_score(y_test, ns_probs)
+lr_auc = roc_auc_score(y_test, lr_probs)
+# summarize scores
+print('No Skill: ROC AUC=%.3f' % (ns_auc))
+print('Random Forest: ROC AUC=%.3f' % (lr_auc))
+# calculate roc curves
+ns_fpr, ns_tpr, _ = roc_curve(y_test, ns_probs)
+lr_fpr, lr_tpr, _ = roc_curve(y_test, lr_probs)
+# plot the roc curve for the model
+pyplot.plot(ns_fpr, ns_tpr, linestyle='--', label='No Skill')
+pyplot.plot(lr_fpr, lr_tpr, marker='.', label='Logistic')
+# axis labels
+pyplot.xlabel('False Positive Rate')
+pyplot.ylabel('True Positive Rate')
+# show the legend
+pyplot.legend()
+# show the plot
+pyplot.show()
+
+
+
+
+# %%
+######Hyperparameter tuning based on nested for loop - LGBM########################
+estimator = [5,10,15,20,50,100,200]
+depth = [1,3,5,8,10,12,15,20]
+for i in estimator:
+    for j in depth:
+        print('#####LGBM model with estimator {0} and depth {1}######'.format(i,j))
+        model = LGBMClassifier(n_estimators = i,max_depth = j)
+        model.fit(os_data_X,os_data_y)
+        predict_train = model.predict(X_train)
+        print('recall score on train data ' + str(recall_score(y_train,predict_train)))
+        train_mat = confusion_matrix(y_train,predict_train)
+        predict_test = model.predict(X_test)
+        print('recall score on test data ' + str(recall_score(y_test,predict_test)))
+
+#Picking estimator and depth of the best model and feeding it to the final best model learning
+
+# %%
+model = LGBMClassifier(n_estimators = 5,max_depth = 3)
+model.fit(os_data_X,os_data_y)
+predict_train = model.predict(X_train)
+print('recall score on train data ' + str(recall_score(y_train,predict_train)))
+train_mat = confusion_matrix(y_train,predict_train)
+
+predict_test = model.predict(X_test)
+print('recall score on test data ' + str(recall_score(y_test,predict_test)))
+test_mat = confusion_matrix(y_test,predict_test)
+
+fig,ax = plt.subplots(1,2,figsize = (15,5))
+sns.heatmap(ax = ax[0],data = train_mat,annot=True,fmt='g',cmap="YlGnBu")
+ax[0].set_xlabel('predicted')
+ax[0].set_ylabel('actual')
+ax[0].title.set_text('confusion matrix for train data')
+sns.heatmap(ax = ax[1],data = test_mat,annot=True,fmt='g')
+ax[1].set_xlabel('predicted')
+ax[1].set_ylabel('actual')
+ax[1].title.set_text('confusion matrix for test data')
+
+
+# %%
+# predict probabilities
+lr_probs = model.predict_proba(X_test)
+ns_probs = [0 for _ in range(len(y_test))]
+# keep probabilities for the positive outcome only
+lr_probs = lr_probs[:, 1]
+# calculate scores
+ns_auc = roc_auc_score(y_test, ns_probs)
+lr_auc = roc_auc_score(y_test, lr_probs)
+# summarize scores
+print('No Skill: ROC AUC=%.3f' % (ns_auc))
+print('LGBM Classifier: ROC AUC=%.3f' % (lr_auc))
+# calculate roc curves
+ns_fpr, ns_tpr, _ = roc_curve(y_test, ns_probs)
+lr_fpr, lr_tpr, _ = roc_curve(y_test, lr_probs)
+# plot the roc curve for the model
+pyplot.plot(ns_fpr, ns_tpr, linestyle='--', label='No Skill')
+pyplot.plot(lr_fpr, lr_tpr, marker='.', label='Logistic')
+# axis labels
+pyplot.xlabel('False Positive Rate')
+pyplot.ylabel('True Positive Rate')
+# show the legend
+pyplot.legend()
+# show the plot
+pyplot.show()
+
+
+#%%
+from sklearn.metrics import classification_report
+y_true, y_pred = y_test, model.predict(X_test)
+print(classification_report(y_true, y_pred))
+
+
+#%%
+############Deep learning model#######################
+#!pip install keras
+#!pip intall tensorflow
+from keras.models import Sequential
+from keras.layers import Dense
+
+model = Sequential() 
+model.add(Dense(10, activation='relu', input_dim=10))
+model.add(Dense(1, activation='sigmoid')) 
+model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy']) 
+model.summary()
+
+
+#%%
+hist = model.fit(os_data_X, os_data_y, validation_data=(X_test, y_test), epochs=150, batch_size=100)
+
+
+# %%
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set()
+acc = hist.history['accuracy']
+val = hist.history['val_accuracy']
+epochs = range(1, len(acc) + 1)
+plt.plot(epochs, acc, '-', label='Training accuracy')
+plt.plot(epochs, val, ':', label='Validation accuracy')
+plt.title('Training and Validation Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend(loc='lower right')
+plt.plot()
+
+
+#%%
+y_predicted = model.predict(X_test) > 0.4
+mat = confusion_matrix(y_test, y_predicted)
+labels = ['0', '1']
+
+sns.heatmap(mat, square=True, annot=True, fmt='d', cbar=False, cmap='Blues',xticklabels=labels, yticklabels=labels)
+
+plt.xlabel('Predicted label')
+plt.ylabel('Actual label')
+
+
+#we are getting good accuracy with deep learning model, but it is similar to bagging and bossting models we have 
+# %%
+from sklearn.metrics import classification_report
+y_predicted = model.predict(X_test) > 0.4
+print(classification_report(y_true, y_predicted))
+
+
+
 # %%
