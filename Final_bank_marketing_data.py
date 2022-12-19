@@ -840,8 +840,7 @@ plt.show()
 
 knn_smote_f = KNeighborsClassifier(n_neighbors=3) 
 knn_smote_f.fit(x_train_smote, y_train_smote)
-ytest_pred_f = knn_smote_f.predict(X_test.loc[:,['age', 'default', 'balance', 'housing', 'loan', 'contact', 'duration',
-       'campaign', 'pdays', 'previous']])
+ytest_pred_f = knn_smote_f.predict(X_test)
 fpr, tpr, threshold = roc_curve(y_test, ytest_pred_f)
 roc_auc = auc(fpr, tpr)
 
@@ -897,6 +896,8 @@ plt.ylabel('True Positive Rate')
 plt.xlabel('False Positive Rate')
 plt.title('ROC Curve of kNN - Full Model')
 plt.show()
+
+
 #%%
 # SVC with different gamma values
 # took 17 mins to execute
