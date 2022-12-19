@@ -757,6 +757,146 @@ for k in (3,5):
     print(classification_report(y_test,ytest_pred))
     print(confusion_matrix(y_test,ytest_pred))
     print()
+    
+# %%
+# KNN -- Reduced Variable Model
+
+for k in (3,5):
+    knn_red = KNeighborsClassifier(n_neighbors=k) 
+    knn_red.fit(X_train.loc[:,['age', 'default', 'balance', 'housing', 'loan', 'contact', 'duration',
+       'campaign', 'pdays', 'previous']], y_train)
+    ytest_pred_red = knn_red.predict(X_test.loc[:,['age', 'default', 'balance', 'housing', 'loan', 'contact', 'duration',
+       'campaign', 'pdays', 'previous']])
+    # Score report
+    print(k)
+    print(classification_report(y_test, ytest_pred_red))
+    print(confusion_matrix(y_test, ytest_pred_red))
+    print()
+
+# %%
+# KNN -- Smote Enhanced Full Model 
+#
+from imblearn.over_sampling import SMOTE
+smote = SMOTE(random_state=123)
+x_train_smote, y_train_smote=smote.fit_resample(X_train, y_train)
+for k in (3,5):
+    knn_smote_full = KNeighborsClassifier(n_neighbors=k) 
+    knn_smote_full.fit(x_train_smote, y_train_smote)
+    ytest_pred_smote = knn_smote_full.predict(X_test)
+    # Score report
+    print(k)
+    print(classification_report(y_test, ytest_pred_smote))
+    print(confusion_matrix(y_test, ytest_pred_smote))
+    print()
+
+# %%
+# KNN -- Smote Enhanced Reduced Variable Model 
+#
+smote_red = SMOTE(random_state=123)
+x_train_smote_red, y_train_smote_red = smote_red.fit_resample(X_train.loc[:,['age', 'default', 'balance', 'housing', 'loan', 'contact', 'duration',
+       'campaign', 'pdays', 'previous']], y_train)
+for k in (3,5,7,9,11,13,15,17,19,21,23,25,27,29):
+    knn_smote_red = KNeighborsClassifier(n_neighbors=k) 
+    knn_smote_red.fit(x_train_smote_red, y_train_smote_red)
+    ytest_pred_smote_red = knn_smote_red.predict(X_test.loc[:,['age', 'default', 'balance', 'housing', 'loan', 'contact', 'duration',
+       'campaign', 'pdays', 'previous']])
+    # Score report
+    print(k)
+    print(classification_report(y_test, ytest_pred_smote_red))
+    print(confusion_matrix(y_test, ytest_pred_smote_red))
+    print()
+
+# %%
+knn_cvs = KNeighborsClassifier(n_neighbors=25)
+xmodel_result = cross_val_score(knn_cvs, x_train_smote, y_train_smote, cv=10)
+knn_cvs.fit(x_train_smote, y_train_smote)
+knn_cvs.score(x_train_smote, y_train_smote)
+
+#%%
+# KNN - SMOTE RED
+from sklearn.metrics import roc_curve
+from sklearn.metrics import auc
+
+knn_smote_3 = KNeighborsClassifier(n_neighbors=25) 
+knn_smote_3.fit(x_train_smote_red, y_train_smote_red)
+ytest_pred_3 = knn_smote_3.predict(X_test.loc[:,['age', 'default', 'balance', 'housing', 'loan', 'contact', 'duration',
+       'campaign', 'pdays', 'previous']])
+fpr, tpr, threshold = roc_curve(y_test, ytest_pred_3)
+roc_auc = auc(fpr, tpr)
+
+plt.title('Receiver Operating Characteristic')
+plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
+plt.legend(loc = 'lower right')
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0, 1])
+plt.ylim([0, 1])
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.title('ROC Curve of kNN')
+plt.show()
+
+#%%
+# KNN - SMOTE Full
+
+knn_smote_f = KNeighborsClassifier(n_neighbors=3) 
+knn_smote_f.fit(x_train_smote, y_train_smote)
+ytest_pred_f = knn_smote_f.predict(X_test.loc[:,['age', 'default', 'balance', 'housing', 'loan', 'contact', 'duration',
+       'campaign', 'pdays', 'previous']])
+fpr, tpr, threshold = roc_curve(y_test, ytest_pred_f)
+roc_auc = auc(fpr, tpr)
+
+plt.title('Receiver Operating Characteristic')
+plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
+plt.legend(loc = 'lower right')
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0, 1])
+plt.ylim([0, 1])
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.title('ROC Curve of kNN')
+plt.show()
+
+#%%
+# KNN - Full Reduced
+
+knn_f = KNeighborsClassifier(n_neighbors=3) 
+knn_f.fit(X_train.loc[:,['age', 'default', 'balance', 'housing', 'loan', 'contact', 'duration',
+       'campaign', 'pdays', 'previous']], y_train)
+ytest_pred_f = knn_f.predict(X_test.loc[:,['age', 'default', 'balance', 'housing', 'loan', 'contact', 'duration',
+       'campaign', 'pdays', 'previous']])
+fpr, tpr, threshold = roc_curve(y_test, ytest_pred_f)
+roc_auc = auc(fpr, tpr)
+
+plt.title('Receiver Operating Characteristic')
+plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
+plt.legend(loc = 'lower right')
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0, 1])
+plt.ylim([0, 1])
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.title('ROC Curve of kNN - Reduced Variables')
+plt.show()
+
+#%%
+# KNN - Full 
+
+knn_f = KNeighborsClassifier(n_neighbors=3) 
+knn_f.fit(X_train, y_train)
+ytest_pred_f = knn_f.predict(X_test)
+fpr, tpr, threshold = roc_curve(y_test, ytest_pred_f)
+roc_auc = auc(fpr, tpr)
+
+plt.title('Receiver Operating Characteristic')
+plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
+plt.legend(loc = 'lower right')
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0, 1])
+plt.ylim([0, 1])
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.title('ROC Curve of kNN - Full Model')
+plt.show()
 #%%
 # SVC with different gamma values
 # took 17 mins to execute
