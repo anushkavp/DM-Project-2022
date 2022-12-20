@@ -705,20 +705,20 @@ clf3 = SVC()
 clf4 = SVC(kernel='rbf', probability=True, C=1, gamma=0.1)
 classifiers = [clf1,clf2,clf3, clf4] 
 
-# for c in classifiers:
-#     print("Classifier: ",c)
-#     c.fit(os_data_X,os_data_y) 
-#     print(f'svc train score:  {c.score(X_train,y_train)}')
-#     print(f'svc test score:  {c.score(X_test,y_test)}')
-#     pred = c.predict(X_test)
-#     print(confusion_matrix(y_test, pred))
-#     print(classification_report(y_test, pred))
-clf1.fit(os_data_X, os_data_y)
-print(f'svc train score:  {clf1.score(X_train,y_train)}')
-print(f'svc test score:  {clf1.score(X_test,y_test)}')
-pred = clf1.predict(X_test)
-print(confusion_matrix(y_test, clf1.predict(X_test)))
-print(classification_report(y_test, clf1.predict(X_test)))
+for c in classifiers:
+    print("Classifier: ",c)
+    c.fit(os_data_X,os_data_y) 
+    print(f'svc train score:  {c.score(X_train,y_train)}')
+    print(f'svc test score:  {c.score(X_test,y_test)}')
+    pred = c.predict(X_test)
+    print(confusion_matrix(y_test, pred))
+    print(classification_report(y_test, pred))
+# clf1.fit(os_data_X, os_data_y)
+# print(f'svc train score:  {clf1.score(X_train,y_train)}')
+# print(f'svc test score:  {clf1.score(X_test,y_test)}')
+# pred = clf1.predict(X_test)
+# print(confusion_matrix(y_test, clf1.predict(X_test)))
+# print(classification_report(y_test, clf1.predict(X_test)))
 
 
 #%%
@@ -985,8 +985,6 @@ pyplot.legend()
 pyplot.show()
 
 
-
-
 # %%
 ######Hyperparameter tuning based on nested for loop - LGBM########################
 # %conda install lightgbm
@@ -1059,59 +1057,3 @@ pyplot.show()
 from sklearn.metrics import classification_report
 y_true, y_pred = y_test, model.predict(X_test)
 print(classification_report(y_true, y_pred))
-
-
-#%%
-############Deep learning model#######################
-#%pip install keras
-#%pip install tensorflow
-from keras.models import Sequential
-from keras.layers import Dense
-
-model = Sequential() 
-model.add(Dense(10, activation='relu', input_dim=10))
-model.add(Dense(1, activation='sigmoid')) 
-model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy']) 
-model.summary()
-
-
-#%%
-hist = model.fit(os_data_X, os_data_y, validation_data=(X_test, y_test), epochs=150, batch_size=100)
-
-
-# %%
-import matplotlib.pyplot as plt
-import seaborn as sns
-sns.set()
-acc = hist.history['accuracy']
-val = hist.history['val_accuracy']
-epochs = range(1, len(acc) + 1)
-plt.plot(epochs, acc, '-', label='Training accuracy')
-plt.plot(epochs, val, ':', label='Validation accuracy')
-plt.title('Training and Validation Accuracy')
-plt.xlabel('Epoch')
-plt.ylabel('Accuracy')
-plt.legend(loc='lower right')
-plt.plot()
-
-
-#%%
-y_predicted = model.predict(X_test) > 0.4
-mat = confusion_matrix(y_test, y_predicted)
-labels = ['0', '1']
-
-sns.heatmap(mat, square=True, annot=True, fmt='d', cbar=False, cmap='Blues',xticklabels=labels, yticklabels=labels)
-
-plt.xlabel('Predicted label')
-plt.ylabel('Actual label')
-
-
-#we are getting good accuracy with deep learning model, but it is similar to bagging and bossting models we have 
-# %%
-from sklearn.metrics import classification_report
-y_predicted = model.predict(X_test) > 0.4
-print(classification_report(y_true, y_predicted))
-
-
-
-# %%
