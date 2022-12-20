@@ -578,7 +578,7 @@ columns = X_train.columns
 
 os_data_X,os_data_y=os.fit_resample(X_train, y_train)
 os_data_X = pd.DataFrame(data=os_data_X,columns=columns )
-os_data_y= pd.DataFrame(data=os_data_y)
+os_data_y= pd.Series(data=os_data_y)
 
 logisticRegr = LogisticRegression()
 logisticRegr.fit(os_data_X, os_data_y)
@@ -646,7 +646,7 @@ columns = X_train.columns
 
 os_data_X,os_data_y=os.fit_resample(X_train, y_train)
 os_data_X = pd.DataFrame(data=os_data_X,columns=columns )
-os_data_y= pd.DataFrame(data=os_data_y)
+os_data_y= pd.Series(data=os_data_y)
 
 os_data = pd.concat([os_data_X.reset_index(drop=True), os_data_y], axis=1)
 os_test = pd.concat([X_test.reset_index(drop=True), y_test], axis=1)
