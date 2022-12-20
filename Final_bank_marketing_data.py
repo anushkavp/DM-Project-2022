@@ -987,7 +987,7 @@ pyplot.show()
 
 # %%
 ######Hyperparameter tuning based on nested for loop - LGBM########################
-# %conda install lightgbm
+!conda install lightgbm
 from lightgbm import LGBMClassifier
 estimator = [5,10,15,20,50,100,200]
 depth = [1,3,5,8,10,12,15,20]
